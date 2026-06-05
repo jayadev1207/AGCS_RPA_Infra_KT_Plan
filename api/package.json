@@ -1,0 +1,9 @@
+{
+  "name": "rpa-dashboard-api",
+  "version": "1.0.0",
+  "description": "Azure Function API for RPA Infra Handover Dashboard",
+  "main": "data/index.js",
+  "dependencies": {
+    "@azure/storage-blob": "^12.18.0"
+  }
+}
