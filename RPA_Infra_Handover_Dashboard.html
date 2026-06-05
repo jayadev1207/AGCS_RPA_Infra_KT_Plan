@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPA Infra Handover Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f2744;--navy2:#162f55;--blue:#1a56db;--blue2:#2563eb;--blue3:#3b82f6;
+  --pale:#dbeafe;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;
+  --g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;
+  --white:#fff;--green:#16a34a;--gbg:#f0fdf4;--gbd:#86efac;
+  --amber:#d97706;--abg:#fffbeb;--abd:#fcd34d;
+  --red:#dc2626;--rbg:#fef2f2;--rbd:#fca5a5;
+  --purple:#7c3aed;--teal:#0d9488;
+  --sbw:242px;--tbh:56px;
+  --sh:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --sh2:0 4px 6px -1px rgba(0,0,0,.1);
+  --r:8px;--rl:12px
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  background:var(--g100);color:var(--g900);font-size:13px;line-height:1.5;
+  height:100vh;overflow:hidden;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sbw);min-width:var(--sbw);background:var(--navy);height:100vh;
+  display:flex;flex-direction:column;overflow:hidden;z-index:200;
+  transition:width .25s,min-width .25s;position:relative;flex-shrink:0}
+.sidebar.col{width:58px;min-width:58px}
+.sb-brand{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;
+  display:flex;align-items:center;gap:9px}
+.sb-icon{width:34px;height:34px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sb-btext{overflow:hidden;transition:opacity .2s,width .2s}
+.sidebar.col .sb-btext{opacity:0;width:0}
+.sb-btext strong{display:block;color:#fff;font-size:13px;font-weight:700;white-space:nowrap}
+.sb-btext span{display:block;color:rgba(255,255,255,.45);font-size:10px;white-space:nowrap}
+.sb-toggle{position:absolute;right:-11px;top:62px;width:22px;height:22px;background:var(--navy);
+  border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:10px;color:rgba(255,255,255,.5);z-index:201;
+  transition:all .15s;flex-shrink:0}
+.sb-toggle:hover{background:var(--blue2);color:#fff;border-color:transparent}
+
+.sb-user{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;display:flex;align-items:center;gap:8px}
+.sbu-ico{width:28px;height:28px;min-width:28px;background:var(--blue2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.sbu-inp{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;
+  padding:4px 8px;border-radius:6px;font-size:11px;width:100%;font-family:inherit;min-width:0;
+  transition:opacity .2s}
+.sbu-inp::placeholder{color:rgba(255,255,255,.3)}
+.sbu-inp:focus{outline:none;background:rgba(255,255,255,.14)}
+.sidebar.col .sbu-inp{opacity:0;width:0;padding:0;border:none}
+
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 0}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+.sb-lbl{padding:7px 12px 2px;font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:rgba(255,255,255,.28);white-space:nowrap}
+.sidebar.col .sb-lbl{display:none}
+.nv{display:flex;align-items:center;gap:9px;padding:8px 10px;cursor:pointer;
+  color:rgba(255,255,255,.6);border-radius:7px;margin:1px 6px;
+  transition:background .15s,color .15s;overflow:hidden;position:relative;white-space:nowrap}
+.nv:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9)}
+.nv.on{background:rgba(37,99,235,.35);color:#fff;box-shadow:inset 0 0 0 1px rgba(37,99,235,.4)}
+.nv-ico{width:28px;height:28px;min-width:28px;border-radius:6px;background:rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .15s}
+.nv.on .nv-ico{background:rgba(37,99,235,.55)}
+.nv-body{flex:1;min-width:0;overflow:hidden;transition:opacity .2s,width .2s}
+.sidebar.col .nv-body{opacity:0;width:0}
+.nv-t{display:block;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.nv-s{display:block;font-size:10px;color:rgba(255,255,255,.33);overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.nv.on .nv-s{color:rgba(255,255,255,.5)}
+.nv-pct{font-size:10px;font-weight:700;background:rgba(255,255,255,.1);padding:1px 6px;
+  border-radius:999px;flex-shrink:0;transition:opacity .2s}
+.nv.on .nv-pct{background:var(--blue2)}
+.sidebar.col .nv-pct{display:none}
+
+.sb-foot{padding:9px 8px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.sbf{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;cursor:pointer;
+  font-size:11px;font-weight:500;border:1px solid;white-space:nowrap;overflow:hidden;
+  transition:all .15s;width:100%;font-family:inherit}
+.sbf-t{overflow:hidden;text-overflow:ellipsis;transition:opacity .2s,width .2s}
+.sidebar.col .sbf-t{opacity:0;width:0}
+.sbf-i{font-size:14px;flex-shrink:0;width:20px;text-align:center}
+.sbf.ld{background:rgba(37,99,235,.2);border-color:rgba(37,99,235,.4);color:#93c5fd}
+.sbf.ld:hover{background:rgba(37,99,235,.4);color:#fff}
+.sbf.sv{background:rgba(22,163,74,.15);border-color:rgba(22,163,74,.35);color:#86efac}
+.sbf.sv:hover{background:rgba(22,163,74,.35);color:#fff}
+.sbf.ex{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.6)}
+.sbf.ex:hover{background:rgba(255,255,255,.12);color:#fff}
+.sb-meta{font-size:9px;color:rgba(255,255,255,.22);padding:0 4px;text-align:center;
+  line-height:1.4;overflow:hidden;transition:opacity .2s}
+.sidebar.col .sb-meta{opacity:0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── TOPBAR ── */
+.topbar{height:var(--tbh);background:var(--white);border-bottom:1px solid var(--g200);
+  display:flex;align-items:center;gap:10px;padding:0 18px;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);z-index:50}
+.tb-ham{display:none;background:none;border:1px solid var(--g200);border-radius:6px;
+  padding:5px 8px;cursor:pointer;font-size:14px;color:var(--g600)}
+.tb-titl{flex:1;min-width:0}
+.tb-titl h2{font-size:14px;font-weight:600;color:var(--g900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-titl p{font-size:10px;color:var(--g500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-sep{width:1px;height:22px;background:var(--g200);flex-shrink:0}
+.tb-prog{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.tb-prog-bar{width:100px;height:6px;background:var(--g200);border-radius:999px;overflow:hidden}
+.tb-prog-fill{height:100%;background:var(--green);border-radius:999px;transition:width .5s}
+.tb-prog-pct{font-size:13px;font-weight:700;color:var(--g700);min-width:36px;white-space:nowrap}
+.tbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;
+  font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--g200);
+  background:var(--white);color:var(--g600);white-space:nowrap;transition:all .15s;font-family:inherit}
+.tbtn:hover{background:var(--g100);color:var(--g900);border-color:var(--g300)}
+.tbtn.blue{background:var(--blue2);color:#fff;border-color:transparent}
+.tbtn.blue:hover{background:#1d4ed8}
+.tbtn.red{background:var(--rbg);color:var(--red);border-color:var(--rbd)}
+.tbtn.red:hover{background:#fecaca}
+
+/* ── PAGES ── */
+.pages{flex:1;overflow:hidden;position:relative}
+.pg{display:none;height:100%;overflow-y:auto;overflow-x:hidden;flex-direction:column}
+.pg.on{display:flex}
+.pi{padding:18px 20px 36px;max-width:1440px;width:100%;margin:0 auto}
+
+/* ── OVERVIEW ── */
+.ov-banner{background:var(--pale);border:1px solid #bfdbfe;border-radius:var(--r);
+  padding:10px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:9px;
+  font-size:12px;color:var(--blue2);line-height:1.5}
+.ov-banner b{font-weight:700}
+.ov-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.ost{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);
+  padding:13px 14px;box-shadow:var(--sh);display:flex;align-items:center;gap:10px}
+.ost-ico{width:40px;height:40px;min-width:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.ost-ico.bl{background:#eff6ff}.ost-ico.gr{background:#f0fdf4}.ost-ico.am{background:#fffbeb}
+.ost-ico.gy{background:var(--g100)}.ost-ico.rd{background:#fef2f2}.ost-ico.pu{background:#faf5ff}
+.ost-n{font-size:24px;font-weight:700;line-height:1;color:var(--g900)}
+.ost-l{font-size:10px;color:var(--g500);margin-top:2px}
+.ov-secs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.osc{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:15px;
+  box-shadow:var(--sh);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.osc:hover{border-color:var(--blue3);box-shadow:var(--sh2)}
+.osc-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.osc-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.osc-tt{font-size:12px;font-weight:600;color:var(--g800)}
+.osc-ss{font-size:10px;color:var(--g500);margin-top:1px}
+.osc-pr{display:flex;justify-content:space-between;font-size:11px;color:var(--g500);margin-bottom:4px}
+.osc-tr{height:5px;background:var(--g200);border-radius:999px;overflow:hidden;margin-bottom:9px}
+.osc-fl{height:100%;border-radius:999px;transition:width .5s}
+.osc-tags{display:flex;gap:6px;flex-wrap:wrap}
+.osc-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.osc-tag.r{background:#fee2e2;color:#991b1b}.osc-tag.g{background:#dcfce7;color:#166534}
+.osc-tag.b{background:var(--pale);color:#1e40af}
+.ov-alerts{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:15px;box-shadow:var(--sh)}
+.ov-alerts h3{font-size:13px;font-weight:600;color:var(--g800);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.al{display:flex;align-items:flex-start;gap:8px;padding:8px 11px;border-radius:6px;
+  font-size:12px;margin-bottom:5px;line-height:1.45}
+.al:last-child{margin-bottom:0}
+.al.r{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
+.al.a{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
+.al.b{background:var(--pale);color:var(--blue2);border:1px solid #bfdbfe}
+.al.g{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
+
+/* ── PAGE HEADER ── */
+.ph{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);
+  padding:15px 17px;margin-bottom:14px;box-shadow:var(--sh);
+  display:flex;align-items:flex-start;gap:13px}
+.ph-ico{width:46px;height:46px;min-width:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ph-body{flex:1;min-width:0}
+.ph-title{font-size:15px;font-weight:700;color:var(--g900)}
+.ph-desc{font-size:11px;color:var(--g500);margin-top:3px;line-height:1.5}
+.ph-prog{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;min-width:130px}
+.ph-pct{font-size:26px;font-weight:700;color:var(--g900);line-height:1}
+.ph-sub{font-size:11px;color:var(--g500)}
+.ph-tr{height:7px;background:var(--g200);border-radius:999px;overflow:hidden;width:130px}
+.ph-fl{height:100%;border-radius:999px;background:var(--green);transition:width .5s}
+
+/* ── FILTER BAR ── */
+.fbar{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);
+  padding:9px 13px;margin-bottom:12px;display:flex;gap:7px;flex-wrap:wrap;
+  align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--g400)}
+.fsel,.fsrch{height:27px;padding:0 8px;border:1px solid var(--g200);border-radius:6px;
+  font-size:12px;color:var(--g700);background:var(--white);font-family:inherit}
+.fsrch{min-width:150px;flex:1}
+.fsel:focus,.fsrch:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 2px rgba(37,99,235,.1)}
+.fd{width:1px;height:16px;background:var(--g200);flex-shrink:0}
+.fbtn{height:27px;padding:0 9px;border:1px solid var(--g200);border-radius:6px;
+  font-size:11px;cursor:pointer;background:var(--white);color:var(--g500);font-family:inherit}
+.fbtn:hover{background:var(--g100)}
+.fcnt{font-size:11px;color:var(--g400);padding:0 2px;white-space:nowrap}
+.xa-bar{display:flex;gap:6px;align-items:center;margin-left:auto}
+.xa{height:27px;padding:0 9px;border:1px solid var(--g200);border-radius:6px;
+  font-size:11px;cursor:pointer;background:var(--white);color:var(--g600);font-family:inherit;white-space:nowrap}
+.xa:hover{background:var(--g100)}
+
+/* ── SUBSECTION CARD ── */
+.subc{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);
+  margin-bottom:9px;box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden}
+.subc-hdr{display:flex;align-items:center;gap:10px;padding:10px 13px;
+  cursor:pointer;user-select:none;background:var(--g50);border-bottom:1px solid var(--g200);
+  transition:background .15s}
+.subc-hdr:hover{background:var(--g100)}
+.subc-n{width:22px;height:22px;min-width:22px;border-radius:5px;color:#fff;font-size:10px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.subc-info{flex:1;min-width:0}
+.subc-tt{font-size:13px;font-weight:600;color:var(--g800)}
+.subc-sm{font-size:11px;color:var(--g500);margin-top:1px}
+.subc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.subc-prog{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g500)}
+.subc-tr{width:56px;height:4px;background:var(--g200);border-radius:999px;overflow:hidden}
+.subc-fl{height:100%;border-radius:999px;transition:width .5s}
+.chev{transition:transform .22s;font-size:11px;color:var(--g400)}
+.chev.op{transform:rotate(180deg)}
+.subc-body{display:none;overflow-x:auto}
+.subc-body.op{display:block}
+
+/* ── CHECKLIST TABLE ── */
+table.clt{width:100%;border-collapse:collapse;min-width:680px}
+.clt th{padding:6px 9px;background:#f9fafb;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--g400);text-align:left;border-bottom:1px solid var(--g200);white-space:nowrap}
+.clt td{padding:7px 9px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.clt tr.ir:hover td{background:var(--g50)}
+.clt tr.ir.dn td{background:#f8fdf9}
+.clt tr.ir.dn .ittl{text-decoration:line-through;color:var(--g400)}
+.clt tr.ir.hid{display:none!important}
+.ittl{font-size:13px;color:var(--g700);line-height:1.4}
+.inum{font-size:11px;color:var(--g400);font-weight:500}
+.cb{width:15px;height:15px;cursor:pointer;accent-color:var(--blue2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.bH{background:#fee2e2;color:#991b1b}
+.bM{background:#fef3c7;color:#92400e}
+.bL{background:#dcfce7;color:#166534}
+.bD{background:var(--pale);color:#1e40af}
+
+/* STATUS */
+.ssel{height:25px;padding:0 5px;border-radius:6px;font-size:11px;font-weight:500;
+  cursor:pointer;border:1px solid;background:var(--white);width:100%;font-family:inherit}
+.sNS{border-color:var(--g300);color:var(--g500)}
+.sIP{border-color:var(--abd);color:var(--amber);background:var(--abg)}
+.sCP{border-color:var(--gbd);color:var(--green);background:var(--gbg)}
+.sNA{border-color:#a78bfa;color:#6d28d9;background:#f5f3ff}
+
+/* INPUTS */
+.oinp{height:25px;padding:0 7px;border:1px solid var(--g200);border-radius:6px;font-size:12px;
+  width:100%;color:var(--g700);background:var(--white);font-family:inherit}
+.oinp:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 2px rgba(37,99,235,.1)}
+.nbtn{padding:2px 7px;font-size:11px;border:1px solid var(--g200);border-radius:5px;
+  background:var(--white);cursor:pointer;color:var(--g500);white-space:nowrap;transition:all .15s}
+.nbtn:hover,.nbtn.on{background:var(--pale);color:var(--blue2);border-color:var(--blue2)}
+.nrow{display:none}
+.nrow.op{display:table-row}
+.nrow td{padding:3px 9px 8px 44px!important;border-bottom:1px solid #f1f5f9!important}
+.nta{width:100%;padding:5px 8px;border:1px solid var(--g200);border-radius:6px;font-size:12px;
+  font-family:inherit;resize:vertical;min-height:32px;color:var(--g700)}
+.nta:focus{outline:none;border-color:var(--blue2)}
+
+/* ── KT TABLE ── */
+.ktt{width:100%;border-collapse:collapse;min-width:750px}
+.ktt th{padding:6px 10px;background:var(--g50);font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--g400);text-align:left;border-bottom:1px solid var(--g200);white-space:nowrap}
+.ktt td{padding:7px 10px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.ktt tr:hover td{background:var(--g50)}
+.ktt input,.ktt select{padding:3px 6px;border:1px solid var(--g200);border-radius:6px;font-size:12px;
+  color:var(--g700);width:100%;background:var(--white);font-family:inherit}
+.ktt input:focus,.ktt select:focus{outline:none;border-color:var(--blue2)}
+.sosel{height:25px;padding:0 5px;border-radius:6px;font-size:11px;font-weight:500;
+  cursor:pointer;border:1px solid;background:var(--white);width:100%;font-family:inherit}
+.soP{border-color:var(--g300);color:var(--g500)}
+.soS{border-color:var(--gbd);color:var(--green);background:var(--gbg)}
+.soW{border-color:var(--abd);color:var(--amber);background:var(--abg)}
+.soNA{border-color:#a78bfa;color:#6d28d9;background:#f5f3ff}
+.kt-foot{background:var(--g100);padding:9px 13px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--g200)}
+.kt-foot span{font-size:12px;color:var(--g500);white-space:nowrap}
+.kt-pt{flex:1;height:5px;background:var(--g200);border-radius:999px;overflow:hidden}
+.kt-pf{height:100%;background:var(--green);border-radius:999px;transition:width .5s}
+
+/* ── RISK / DEP / ESC ── */
+.rtable{width:100%;border-collapse:collapse;min-width:680px}
+.rtable th{padding:6px 10px;background:var(--g50);font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--g400);text-align:left;border-bottom:1px solid var(--g200);white-space:nowrap}
+.rtable td{padding:6px 10px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.rtable tr:hover td{background:var(--g50)}
+.rtable input,.rtable select,.rtable textarea{padding:3px 7px;border:1px solid var(--g200);border-radius:6px;
+  font-size:12px;color:var(--g700);width:100%;background:var(--white);font-family:inherit}
+.rtable textarea{resize:vertical;min-height:30px;line-height:1.4}
+.rtable input:focus,.rtable select:focus,.rtable textarea:focus{outline:none;border-color:var(--blue2)}
+.add-btn{display:block;margin:8px 12px;padding:7px;background:var(--white);border:1px dashed var(--g300);
+  border-radius:7px;cursor:pointer;font-size:12px;color:var(--g400);text-align:center;
+  width:calc(100% - 24px);transition:all .15s;font-family:inherit}
+.add-btn:hover{background:var(--pale);border-color:var(--blue2);color:var(--blue2)}
+.id-chip{font-size:10px;font-weight:600;color:var(--g400);background:var(--g100);
+  padding:1px 5px;border-radius:4px;white-space:nowrap}
+
+/* ── C-TWO SECTION ── */
+  border-radius:var(--rl);padding:18px 22px;margin-bottom:14px;
+  display:flex;align-items:flex-start;gap:16px;color:#fff}
+  border-radius:8px;padding:8px 14px;min-width:90px}
+
+/* status pills */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;
+  font-size:10px;font-weight:700;white-space:nowrap}
+.pLive{background:#dcfce7;color:#166534}.pIP{background:#fef3c7;color:#92400e}
+.pPend{background:#e0f2fe;color:#0369a1}.pBlk{background:#fee2e2;color:#991b1b}
+.pNA{background:var(--g100);color:var(--g500)}
+
+/* infra component grid */
+  padding:12px 14px;box-shadow:var(--sh)}
+  border-radius:5px;font-size:11px;font-family:inherit;resize:vertical;min-height:44px;color:var(--g700)}
+
+/* milestone timeline */
+  text-transform:uppercase;letter-spacing:.07em;color:var(--g400);text-align:left;
+  border-bottom:1px solid var(--g200);white-space:nowrap}
+  border-radius:6px;font-size:12px;color:var(--g700);width:100%;background:var(--white);font-family:inherit}
+
+/* progress donut (CSS only) */
+  justify-content:center;font-size:10px;font-weight:700;color:var(--g700)}
+
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--g900);color:#fff;
+  padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);transform:translateY(60px);opacity:0;
+  transition:all .3s cubic-bezier(.4,0,.2,1);z-index:9999;pointer-events:none;max-width:340px}
+.toast.on{transform:translateY(0);opacity:1}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){.ov-stats{grid-template-columns:repeat(3,1fr)}.ov-secs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:calc(-1 * var(--sbw));transition:left .25s;width:var(--sbw)!important;min-width:var(--sbw)!important}
+  .sidebar.mob{left:0!important}
+  .sidebar.col{left:calc(-1 * var(--sbw))}
+  .main{width:100%}
+  .tb-ham{display:flex}
+  .ov-stats{grid-template-columns:repeat(2,1fr)}
+  .ov-secs{grid-template-columns:1fr}
+  .clt .co{display:none}
+}
+@media(max-width:560px){.ov-stats{grid-template-columns:1fr 1fr}.clt .cd{display:none}.ph-prog{display:none}}
+@media print{
+  .sidebar,.topbar,.fbar,.toast,.xa-bar{display:none!important}
+  .main{width:100%}
+  .pg{display:flex!important;height:auto!important;overflow:visible!important}
+  .pages{overflow:visible!important;height:auto!important}
+  .subc-body{display:block!important}
+  body{overflow:auto!important;height:auto!important}
+  .pg:not(.on){display:none!important}
+}
+
+/* ── KT TOPICS STATUS BADGES ── */
+.tCov{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.tPart{background:var(--pale);color:#1e40af;border:1px solid #bfdbfe}
+.tPend{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+
+/* ── TEMPLATE CARDS ── */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:14px 0}
+.tpl-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);
+  padding:16px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px}
+.tpl-card-head{display:flex;align-items:center;gap:10px}
+.tpl-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.tpl-title{font-size:13px;font-weight:700;color:var(--g800)}
+.tpl-id{font-size:10px;color:var(--g400);margin-top:1px}
+.tpl-desc{font-size:12px;color:var(--g500);line-height:1.5}
+.tpl-fields{display:flex;flex-wrap:wrap;gap:4px}
+.tpl-field{font-size:10px;background:var(--g100);color:var(--g600);padding:2px 7px;border-radius:4px;border:1px solid var(--g200)}
+.tpl-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:6px;
+  font-size:11px;font-weight:600;cursor:pointer;border:none;color:#fff;font-family:inherit;
+  transition:opacity .15s;margin-top:auto}
+.tpl-btn:hover{opacity:.85}
+
+/* ── TOPIC PROGRESS STAT ── */
+.tp-stat{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sb">
+  <div class="sb-toggle" id="sbTgl" onclick="colSB()" title="Toggle sidebar">◀</div>
+  <div class="sb-brand">
+    <div class="sb-icon">🤖</div>
+    <div class="sb-btext">
+      <strong>RPA Handover</strong>
+      <span>Infra &amp; L1 Operations</span>
+    </div>
+  </div>
+  <div class="sb-user">
+    <div class="sbu-ico" id="sbuIco">?</div>
+    <input type="text" class="sbu-inp" id="sbuInp" placeholder="Your name…" oninput="setUser(this.value)" title="Enter your name — tagged on JSON saves">
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-lbl">Dashboard</div>
+    <div class="nv on" data-p="overview" onclick="goTo('overview')">
+      <div class="nv-ico">🏠</div>
+      <div class="nv-body"><span class="nv-t">Overview</span><span class="nv-s">Progress &amp; summary</span></div>
+    </div>
+        <div class="nv" data-p="s5" onclick="goTo('s5')">
+      <div class="nv-ico">⚠️</div>
+      <div class="nv-body"><span class="nv-t">§5 · Risks &amp; Deps</span><span class="nv-s">Risk log &amp; escalation</span></div>
+    </div>
+    <div class="sb-lbl">Handover Coverage</div>
+    <div class="nv" data-p="s7" onclick="goTo('s7')">
+      <div class="nv-ico" style="background:rgba(124,58,237,.2)">📋</div>
+      <div class="nv-body"><span class="nv-t">§7 · KT Topics</span><span class="nv-s">Coverage status &amp; pending</span></div>
+      <div class="nv-pct" id="np-s7" style="background:rgba(124,58,237,.35)">0%</div>
+    </div>
+    <div class="nv" data-p="s8" onclick="goTo('s8')">
+      <div class="nv-ico" style="background:rgba(2,132,199,.2)">📄</div>
+      <div class="nv-body"><span class="nv-t">§8 · Templates</span><span class="nv-s">Excel &amp; catalog templates</span></div>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <button class="sbf sv" onclick="forceSave()" title="Force save to cloud now">
+      <span class="sbf-i">&#x2601;&#xFE0F;</span><span class="sbf-t">Save to Cloud</span>
+    </button>
+    <button class="sbf ex" onclick="exportCSV()">
+      <span class="sbf-i">&#x1F4E5;</span><span class="sbf-t">Export CSV</span>
+    </button>
+    <div class="sb-meta" id="sbMeta">Loading from cloud...</div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main" id="mainDiv">
+  <header class="topbar">
+    <button class="tb-ham" onclick="mobSB()">☰</button>
+    <div class="tb-titl">
+      <h2 id="tbH">Overview</h2>
+      <p id="tbS">RPA Infra &amp; L1 Operations Handover Dashboard — NA &amp; DE Environments</p>
+    </div>
+    <div class="tb-prog">
+      <div class="tb-prog-bar"><div class="tb-prog-fill" id="tbPF" style="width:0%"></div></div>
+      <span class="tb-prog-pct" id="tbPct">0%</span>
+    </div>
+    <div class="tb-sep"></div>
+    <span id="cloudStatus" style="font-size:11px;color:var(--g500);padding:0 6px">&#x2601; Syncing...</span>
+    <button class="tbtn" onclick="window.print()">&#x1F5A8; Print</button>
+    <button class="tbtn red" onclick="doReset()">&#x21BA; Reset</button>
+  </header>
+  <div class="pages">
+    <div class="pg on" id="pg-overview"><div class="pi" id="ov"></div></div>
+    <div class="pg" id="pg-s5"><div class="pi" id="c-s5"></div></div>
+    <div class="pg" id="pg-s7"><div class="pi" id="c-s7"></div></div>
+    <div class="pg" id="pg-s8"><div class="pi" id="c-s8"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="tst"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+
+
+const RISK0=[
+  {id:'R-01',desc:'Outgoing owner exits before complete KT, leaving critical knowledge gaps',impact:'High',prob:'Medium',mit:'Accelerate critical KT sessions Days 1–2; record all sessions; document undocumented processes immediately',owner:'',status:'Open'},
+  {id:'R-02',desc:'System access provisioning delayed beyond Day 1',impact:'High',prob:'Medium',mit:'Raise all access requests on Day 0; escalate to IT manager if unresolved by EOD Day 1',owner:'',status:'Open'},
+  {id:'R-03',desc:'Critical processes undocumented — documentation gaps found during KT',impact:'High',prob:'Medium',mit:'Conduct shadowing sessions; record all walkthroughs; create SOPs during KT sessions',owner:'',status:'Open'},
+  {id:'R-04',desc:'Complex processes inadequately transferred — insufficient KT depth',impact:'High',prob:'Low',mit:'Request repeat hands-on sessions; buddy pairing; outgoing owner on emergency call for 2 weeks',owner:'',status:'Open'},
+  {id:'R-05',desc:'Key SMEs or stakeholders unavailable for scheduled KT sessions',impact:'Medium',prob:'Medium',mit:'Schedule KT sessions 3+ days in advance; identify and brief backup SMEs for each area',owner:'',status:'Open'},
+  {id:'R-06',desc:'Production BOT instability or critical incidents during transition period',impact:'High',prob:'Low',mit:'Keep outgoing owner on emergency contact; implement change freeze on non-critical changes',owner:'',status:'Open'},
+  {id:'R-07',desc:'License expiry for UiPath or infra components during transition window',impact:'High',prob:'Low',mit:'Review ALL license renewal dates on Day 1; initiate renewal process if expiry within 45 days',owner:'',status:'Open'},
+  {id:'R-08',desc:'Missing service account credentials or password vault access not transferred',impact:'High',prob:'Medium',mit:'Credential handover part of Day 0 checklist; IT Security to validate all accounts on Day 0',owner:'',status:'Open'},
+];
+
+const DEP0=[
+  {id:'D-01',dep:'Outgoing owner full availability for KT sessions (minimum 1 full week)',owner:'',due:'',status:'Open'},
+  {id:'D-02',dep:'IT team — access provisioning for all required systems and tools',owner:'',due:'',status:'Open'},
+  {id:'D-03',dep:'Security team — firewall rule approvals, VPN configuration',owner:'',due:'',status:'Open'},
+  {id:'D-04',dep:'HR / PMO — distribution list and shared mailbox ownership changes',owner:'',due:'',status:'Open'},
+  {id:'D-05',dep:'AWS team — cloud console IAM access setup for NA & DE',owner:'',due:'',status:'Open'},
+  {id:'D-06',dep:'Key stakeholders — availability for KT sign-off and attestation',owner:'',due:'',status:'Open'},
+  {id:'D-07',dep:'L1 Team — cooperation and readiness documentation for operational handover',owner:'',due:'',status:'Open'},
+];
+
+const ESC0=[
+  {id:'E-01',level:'L1 — Operational',role:'L1 Operations Team',name:'',contact:'',resp:'< 30 mins'},
+  {id:'E-02',level:'L2 — Technical',role:'RPA Infrastructure Team Lead',name:'',contact:'',resp:'< 1 hour'},
+  {id:'E-03',level:'L3 — Management',role:'RPA Manager / Delivery Head',name:'',contact:'',resp:'< 2 hours'},
+  {id:'E-04',level:'L4 — Senior Mgmt',role:'Director / VP Engineering',name:'',contact:'',resp:'< 4 hours'},
+  {id:'E-05',level:'L5 — Vendor',role:'UiPath Enterprise Support',name:'',contact:'',resp:'Per Support SLA'},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let D={meta:{version:'2.0',lastSaved:'',savedBy:'',saveCount:0},items:{},kt:{},risks:[],deps:[],esc:[]};
+let UC={}; // UI collapse state
+let CU=''; // current user
+let rC,dC,eC;
+
+const LSK='rpa_hd4',LSU='rpa_ui4',LSP='rpa_usr4';
+
+function initData(){
+  try{const r=localStorage.getItem(LSK);if(r)D=JSON.parse(r);}catch(e){}
+  if(!D.risks||!D.risks.length)D.risks=JSON.parse(JSON.stringify(RISK0));
+  if(!D.deps||!D.deps.length)D.deps=JSON.parse(JSON.stringify(DEP0));
+  if(!D.esc||!D.esc.length)D.esc=JSON.parse(JSON.stringify(ESC0));
+  if(!D.ktTopics)D.ktTopics={};
+  if(!D.customGroups)D.customGroups=[];
+  if(!D.items)D.items={};
+  if(!D.kt)D.kt={};
+  try{const u=localStorage.getItem(LSU);if(u)UC=JSON.parse(u);}catch(e){}
+  try{CU=localStorage.getItem(LSP)||'';}catch(e){}
+  if(CU){const el=document.getElementById('sbuInp');if(el)el.value=CU;setUserIco(CU);}
+  rC=(D.risks.length||0)+1;dC=(D.deps.length||0)+1;eC=(D.esc.length||0)+1;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+function renderOverview(){
+  const el=document.getElementById('ov');if(!el)return;
+
+  // KT Topics card
+  const ktTotOv=KT_TOPICS.reduce((a,g)=>a+g.topics.length,0);
+  const ktCovOv=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>{
+    const s=D.ktTopics?.[t.id]?.status||(t.covered&&!t.partial?'Covered':t.covered&&t.partial?'Partial':'Pending');
+    return s==='Covered';
+  }).length,0);
+  const ktPartOv=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>{
+    const s=D.ktTopics?.[t.id]?.status||(t.covered&&!t.partial?'Covered':t.covered&&t.partial?'Partial':'Pending');
+    return s==='Partial';
+  }).length,0);
+  const ktPendOv=ktTotOv-ktCovOv-ktPartOv;
+  const ktPctOv=ktTotOv?Math.round(ktCovOv/ktTotOv*100):0;
+  const ktTopicCard=`<div class="osc" onclick="goTo('s7')" style="border-color:#c4b5fd">
+    <div class="osc-head"><div class="osc-ico" style="background:#f5f3ff">📋</div>
+      <div><div class="osc-tt">§7 · KT Topics Coverage</div><div class="osc-ss">${ktCovOv} covered · ${ktPartOv} partial · ${ktPendOv} pending</div></div></div>
+    <div class="osc-pr"><span>Coverage Progress</span><span style="font-weight:700;color:#7c3aed">${ktPctOv}%</span></div>
+    <div class="osc-tr"><div class="osc-fl" style="width:${ktPctOv}%;background:#7c3aed"></div></div>
+    <div class="osc-tags">
+      <span class="osc-tag g">${ktCovOv} covered</span>
+      ${ktPartOv?`<span class="osc-tag b">${ktPartOv} partial</span>`:''}
+      <span class="osc-tag r">${ktPendOv} pending</span>
+    </div></div>`;
+
+  const alts=[];
+  const oR=(D.risks||[]).filter(r=>r.status==='Open').length;
+  if(oR)alts.push(`<div class="al a">⚠️ <div><strong>${oR} open risks</strong> in the risk register — assign owners and confirm mitigation plans.</div></div>`);
+  if(ktPendOv>0)alts.push(`<div class="al a">📋 <div><strong>KT Topics:</strong> ${ktPendOv} topics still pending coverage. ${ktPartOv} partially covered. Review §7 for details.</div></div>`);
+  if(!alts.length)alts.push('<div class="al g">✅ <div>All clear — excellent progress on the RPA Infra handover!</div></div>');
+
+  const ls=D.meta?.lastSaved?'<b>Last saved:</b> '+fmtDt(D.meta.lastSaved)+' by <b>'+(D.meta.savedBy||'Unknown')+'</b>.':'Not yet saved to cloud.';
+  el.innerHTML=
+    '<div class="ov-banner">&#x2601;'
+      +'<span><b>Cloud Sync Active:</b> '+ls
+      +' All changes save automatically to Azure. All users share the same data in real time.'
+      +' Use <b>Export CSV</b> to download a snapshot.</span>'
+    +'</div>'
+    +'<div class="ov-secs">'+ktTopicCard+'</div>'
+    +'<div class="ov-alerts"><h3>&#x26A1; Status Alerts</h3>'+alts.join('')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JSON LOAD / SAVE
+// ═══════════════════════════════════════════════════════════════
+
+
+function saveJSON(){
+  exportCSV(); // kept for CSV-only export if needed
+}
+
+function saveLS(q){
+  D.meta.lastSaved=new Date().toISOString();
+  D.meta.savedBy=CU||'Unknown';
+  try{localStorage.setItem(LSK,JSON.stringify(D));}catch(e){}
+  try{localStorage.setItem(LSU,JSON.stringify(UC));}catch(e){}
+  if(!q)showToast('Saved');
+  updateMeta();
+  scheduleCloudSave();
+}
+
+function updateMeta(cloudOk){
+  const el=document.getElementById('sbMeta');
+  const cs=document.getElementById('cloudStatus');
+  if(!el)return;
+  if(D.meta?.lastSaved){
+    el.textContent='Saved: '+fmtDt(D.meta.lastSaved)+' by '+(D.meta.savedBy||'?');
+    el.title='Save count: '+(D.meta.saveCount||0);
+  }
+  if(cs){
+    if(cloudOk===true){cs.textContent='&#x2601; Synced';cs.style.color='#16a34a';}
+    else if(cloudOk===false){cs.textContent='&#x26A0; Cloud offline — local only';cs.style.color='#d97706';}
+    else{cs.textContent='&#x2601; Syncing...';cs.style.color='var(--g500)';}
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+const TITLES={
+  overview:['Overview','Dashboard — overall progress, section summaries and alerts'],
+  s5:['§5 · Risks & Dependencies','Risk log, dependency tracker and escalation contact matrix'],
+  s7:['§7 · KT Topics Coverage','Covered vs pending handover topics — grouped by area with completion date, documentation link and comments'],
+  s8:['§8 · Templates & Catalogs','Reference templates for User Access, Application Catalog, Mailbox, SNOW Groups, BOT Repository, Contacts, Keeper, Ownership, Infra Tracker and Billing'],
+};
+
+function goTo(p){
+  document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.nv').forEach(e=>e.classList.remove('on'));
+  const pg=document.getElementById('pg-'+p);if(pg){pg.classList.add('on');pg.scrollTop=0;}
+  document.querySelectorAll('.nv[data-p="'+p+'"]').forEach(e=>e.classList.add('on'));
+  const[h,s]=TITLES[p]||['',''];
+  document.getElementById('tbH').textContent=h;
+  document.getElementById('tbS').textContent=s;
+  if(p==='overview')renderOverview();
+  if(p==='s7')renderKTTopics();
+  if(p==='s8')renderTemplates();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR TOGGLE
+// ═══════════════════════════════════════════════════════════════
+function colSB(){
+  const sb=document.getElementById('sb');
+  const tgl=document.getElementById('sbTgl');
+  const c=sb.classList.toggle('col');
+  if(tgl)tgl.textContent=c?'▶':'◀';
+}
+function mobSB(){
+  const sb=document.getElementById('sb');
+  sb.classList.toggle('mob');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUBSECTION COLLAPSE
+// ═══════════════════════════════════════════════════════════════
+function togSub(key){
+  UC[key]=!UC[key];
+  const body=document.getElementById('sb-b-'+key);
+  const chev=document.getElementById('sb-c-'+key);
+  if(body)body.classList.toggle('op',!UC[key]);
+  if(chev)chev.classList.toggle('op',!UC[key]);
+  saveLS(true);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll(){
+  renderOverview();
+  renderRisks();
+  if(document.getElementById('pg-s7')?.classList.contains('on'))renderKTTopics();
+  if(document.getElementById('pg-s8')?.classList.contains('on'))renderTemplates();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER RISKS PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderRisks(){
+  const el=document.getElementById('c-s5');if(!el)return;
+  const rExp=UC['s5_r']===undefined?true:!UC['s5_r'];
+  const dExp=UC['s5_d']===undefined?true:!UC['s5_d'];
+  const eExp=UC['s5_e']===undefined?true:!UC['s5_e'];
+
+  const rRows=(D.risks||[]).map((r,i)=>`<tr>
+  <td><span class="id-chip">${r.id}</span></td>
+  <td><textarea onchange="D.risks[${i}].desc=this.value;saveLS(true)" onblur="D.risks[${i}].desc=this.value;saveLS(true)">${x(r.desc)}</textarea></td>
+  <td><select onchange="D.risks[${i}].impact=this.value;saveLS(true)">
+    <option${r.impact==='High'?' selected':''}>High</option>
+    <option${r.impact==='Medium'?' selected':''}>Medium</option>
+    <option${r.impact==='Low'?' selected':''}>Low</option>
+  </select></td>
+  <td><select onchange="D.risks[${i}].prob=this.value;saveLS(true)">
+    <option${r.prob==='High'?' selected':''}>High</option>
+    <option${r.prob==='Medium'?' selected':''}>Medium</option>
+    <option${r.prob==='Low'?' selected':''}>Low</option>
+  </select></td>
+  <td><textarea onchange="D.risks[${i}].mit=this.value;saveLS(true)" onblur="D.risks[${i}].mit=this.value;saveLS(true)">${x(r.mit)}</textarea></td>
+  <td><input type="text" value="${x(r.owner)}" placeholder="Owner…" onchange="D.risks[${i}].owner=this.value;saveLS(true)" onblur="D.risks[${i}].owner=this.value;saveLS(true)"></td>
+  <td><select onchange="D.risks[${i}].status=this.value;saveLS(true)">
+    <option${r.status==='Open'?' selected':''}>Open</option>
+    <option${r.status==='Mitigated'?' selected':''}>Mitigated</option>
+    <option${r.status==='Closed'?' selected':''}>Closed</option>
+    <option${r.status==='Not Applicable'?' selected':''}>Not Applicable</option>
+  </select></td>
+</tr>`).join('');
+
+  const dRows=(D.deps||[]).map((d,i)=>`<tr>
+  <td><span class="id-chip">${d.id}</span></td>
+  <td><input type="text" value="${x(d.dep)}" onchange="D.deps[${i}].dep=this.value;saveLS(true)" onblur="D.deps[${i}].dep=this.value;saveLS(true)"></td>
+  <td><input type="text" value="${x(d.owner)}" placeholder="Responsible…" onchange="D.deps[${i}].owner=this.value;saveLS(true)" onblur="D.deps[${i}].owner=this.value;saveLS(true)"></td>
+  <td><input type="date" value="${d.due||''}" onchange="D.deps[${i}].due=this.value;saveLS(true)"></td>
+  <td><select onchange="D.deps[${i}].status=this.value;saveLS(true)">
+    <option${d.status==='Open'?' selected':''}>Open</option>
+    <option${d.status==='In Progress'?' selected':''}>In Progress</option>
+    <option${d.status==='Resolved'?' selected':''}>Resolved</option>
+    <option${d.status==='Blocked'?' selected':''}>Blocked</option>
+    <option${d.status==='Not Applicable'?' selected':''}>Not Applicable</option>
+  </select></td>
+</tr>`).join('');
+
+  const eRows=(D.esc||[]).map((e,i)=>`<tr>
+  <td><input type="text" value="${x(e.level)}" onchange="D.esc[${i}].level=this.value;saveLS(true)" onblur="D.esc[${i}].level=this.value;saveLS(true)"></td>
+  <td><input type="text" value="${x(e.role)}" onchange="D.esc[${i}].role=this.value;saveLS(true)" onblur="D.esc[${i}].role=this.value;saveLS(true)"></td>
+  <td><input type="text" value="${x(e.name)}" placeholder="Full name…" onchange="D.esc[${i}].name=this.value;saveLS(true)" onblur="D.esc[${i}].name=this.value;saveLS(true)"></td>
+  <td><input type="text" value="${x(e.contact)}" placeholder="email / phone…" onchange="D.esc[${i}].contact=this.value;saveLS(true)" onblur="D.esc[${i}].contact=this.value;saveLS(true)"></td>
+  <td><input type="text" value="${x(e.resp)}" onchange="D.esc[${i}].resp=this.value;saveLS(true)" onblur="D.esc[${i}].resp=this.value;saveLS(true)"></td>
+</tr>`).join('');
+
+  el.innerHTML=`
+    <div class="ph" style="border-left:4px solid #92400e">
+      <div class="ph-ico" style="background:#fffbeb">⚠️</div>
+      <div class="ph-body">
+        <div class="ph-title">Section 5: Risks, Dependencies & Escalation Matrix</div>
+        <div class="ph-desc">Active risk log, external dependencies and escalation contacts for the transition period. Keep all entries current throughout the handover.</div>
+      </div>
+    </div>
+    <div class="subc">
+      <div class="subc-hdr${rExp?' op':''}" onclick="togSub('s5_r')">
+        <div class="subc-n" style="background:#dc2626">⚠️</div>
+        <div class="subc-info">
+          <div class="subc-tt">Risk Log</div>
+          <div class="subc-sm">${(D.risks||[]).length} risks · ${(D.risks||[]).filter(r=>r.status==='Open').length} open</div>
+        </div>
+        <div class="subc-right"><span class="chev${rExp?' op':''}" id="sb-c-s5_r">▼</span></div>
+      </div>
+      <div class="subc-body${rExp?' op':''}" id="sb-b-s5_r">
+        <div style="overflow-x:auto">
+          <table class="rtable">
+            <thead><tr><th style="width:56px">ID</th><th>Description</th><th style="width:72px">Impact</th><th style="width:76px">Prob.</th><th>Mitigation Plan</th><th style="width:108px">Owner</th><th style="width:88px">Status</th></tr></thead>
+            <tbody id="rtb">${rRows}</tbody>
+          </table>
+        </div>
+        <button class="add-btn" onclick="addRisk()">+ Add Risk Item</button>
+      </div>
+    </div>
+    <div class="subc">
+      <div class="subc-hdr${dExp?' op':''}" onclick="togSub('s5_d')">
+        <div class="subc-n" style="background:#0369a1">🔗</div>
+        <div class="subc-info">
+          <div class="subc-tt">Dependencies</div>
+          <div class="subc-sm">${(D.deps||[]).length} dependencies · ${(D.deps||[]).filter(d=>d.status==='Open').length} open</div>
+        </div>
+        <div class="subc-right"><span class="chev${dExp?' op':''}" id="sb-c-s5_d">▼</span></div>
+      </div>
+      <div class="subc-body${dExp?' op':''}" id="sb-b-s5_d">
+        <div style="overflow-x:auto">
+          <table class="rtable">
+            <thead><tr><th style="width:56px">ID</th><th>Dependency</th><th style="width:138px">Responsible Party</th><th style="width:106px">Target Date</th><th style="width:92px">Status</th></tr></thead>
+            <tbody id="dtb">${dRows}</tbody>
+          </table>
+        </div>
+        <button class="add-btn" onclick="addDep()">+ Add Dependency</button>
+      </div>
+    </div>
+    <div class="subc">
+      <div class="subc-hdr${eExp?' op':''}" onclick="togSub('s5_e')">
+        <div class="subc-n" style="background:#065f46">📞</div>
+        <div class="subc-info">
+          <div class="subc-tt">Escalation Matrix</div>
+          <div class="subc-sm">${(D.esc||[]).length} escalation levels configured</div>
+        </div>
+        <div class="subc-right"><span class="chev${eExp?' op':''}" id="sb-c-s5_e">▼</span></div>
+      </div>
+      <div class="subc-body${eExp?' op':''}" id="sb-b-s5_e">
+        <div style="overflow-x:auto">
+          <table class="rtable">
+            <thead><tr><th style="width:118px">Level</th><th style="width:148px">Role / Team</th><th style="width:138px">Name</th><th style="width:168px">Contact (Email / Phone)</th><th style="width:108px">Response Time</th></tr></thead>
+            <tbody id="etb">${eRows}</tbody>
+          </table>
+        </div>
+        <button class="add-btn" onclick="addEsc()">+ Add Escalation Level</button>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+function addRisk(){
+  D.risks=D.risks||[];
+  D.risks.push({id:'R-'+String(rC++).padStart(2,'0'),desc:'',impact:'Medium',prob:'Medium',mit:'',owner:'',status:'Open'});
+  saveLS(true);renderRisks();
+  document.getElementById('sb-b-s5_r')?.classList.add('op');
+  UC['s5_r']=false;
+}
+function addDep(){
+  D.deps=D.deps||[];
+  D.deps.push({id:'D-'+String(dC++).padStart(2,'0'),dep:'',owner:'',due:'',status:'Open'});
+  saveLS(true);renderRisks();
+  document.getElementById('sb-b-s5_d')?.classList.add('op');
+  UC['s5_d']=false;
+}
+function addEsc(){
+  D.esc=D.esc||[];
+  D.esc.push({id:'E-'+String(eC++).padStart(2,'0'),level:'',role:'',name:'',contact:'',resp:''});
+  saveLS(true);renderRisks();
+  document.getElementById('sb-b-s5_e')?.classList.add('op');
+  UC['s5_e']=false;
+}
+
+// PROGRESS UPDATE
+// ═══════════════════════════════════════════════════════════════
+function updAll(){
+  // KT Topics nav -- includes custom groups
+  const cg=D.customGroups||[];
+  const ktTopicTot=KT_TOPICS.reduce((a,g)=>a+g.topics.length,0)+cg.reduce((a,g)=>a+(g.topics||[]).length,0);
+  const ktTopicDon=(D.ktTopics||{});
+  const ktTopicCov=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>ktTopicDon[t.id]?.status==='Covered').length,0)
+    +cg.reduce((a,g)=>a+(g.topics||[]).filter(t=>ktTopicDon[t.id]?.status==='Covered').length,0);
+  const ktp=ktTopicTot?Math.round(ktTopicCov/ktTopicTot*100):0;
+  const np7=document.getElementById('np-s7');
+  if(np7)np7.textContent=ktp+'%';
+}
+// ═══════════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════════
+function applyFilt(sid){
+  const pri=document.getElementById('fp-'+sid)?.value||'';
+  const stat=document.getElementById('fs-'+sid)?.value||'';
+  const q=(document.getElementById('fq-'+sid)?.value||'').toLowerCase().trim();
+  let sh=0,hid=0;
+  document.querySelectorAll(`[data-sec="${sid}"].ir`).forEach(row=>{
+    const rp=row.dataset.pri||'';
+    const rs=row.dataset.stat||'not-started';
+    const rt=(row.querySelector('.ittl')||{}).textContent?.toLowerCase()||'';
+    const vis=(!pri||rp===pri)&&(!stat||rs===stat)&&(!q||rt.includes(q));
+    row.classList.toggle('hid',!vis);
+    const nr=row.nextElementSibling;
+    if(nr?.classList.contains('nrow'))nr.style.display=vis?'':'none';
+    if(vis)sh++;else hid++;
+  });
+  const cnt=document.getElementById('fcnt-'+sid);
+  if(cnt)cnt.textContent=(pri||stat||q)?`${sh} shown`:'';
+}
+
+function clrFilt(sid){
+  ['fp-','fs-','fq-'].forEach(p=>{const e=document.getElementById(p+sid);if(e)e.value='';});
+  applyFilt(sid);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USER
+// ═══════════════════════════════════════════════════════════════
+function setUser(v){
+  CU=v.trim();setUserIco(CU);
+  try{localStorage.setItem(LSP,CU);}catch(e){}
+}
+function setUserIco(n){
+  const el=document.getElementById('sbuIco');
+  if(el)el.textContent=n?n.charAt(0).toUpperCase():'?';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════════
+function doReset(){
+  if(!confirm('⚠️  Reset ALL progress?\n\nThis will clear all checkboxes, statuses, owners, notes, and custom entries.\n\nThis cannot be undone.'))return;
+  localStorage.removeItem(LSK);localStorage.removeItem(LSU);
+  showToast('🔄 Resetting…');setTimeout(()=>location.reload(),600);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════════════════
+function exportCSV(){
+  const rows=[['Section','ID','Activity / Task','Priority','Status','Owner','Notes']];
+  rows.push(['=== KT TOPICS COVERAGE ===','','','','','','']);
+  rows.push(['Group','ID','Topic','Status','Date Covered','Documentation','Notes']);
+  KT_TOPICS.forEach(g=>g.topics.forEach(t=>{
+    const s=D.ktTopics?.[t.id]||{};
+    const sts=s.status||(t.covered&&!t.partial?'Covered':t.covered&&t.partial?'Partial':'Pending');
+    rows.push([g.group,t.id,t.t,sts,s.date||'',s.doc||'',s.notes||'']);
+  }));
+  (D.customGroups||[]).forEach(g=>(g.topics||[]).forEach(t=>{
+    const s=D.ktTopics?.[t.id]||{};
+    rows.push([g.group,t.id,t.t,s.status||'Pending',s.date||'',s.doc||'',s.notes||'']);
+  }));
+  const nl=String.fromCharCode(13,10);
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join(nl);
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='RPA_Handover_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('CSV exported');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOUD SYNC (Azure Function API + Blob Storage)
+// ═══════════════════════════════════════════════════════════════
+const API_URL='/api/data';
+let _cloudSaveTimer=null;
+let _cloudSaving=false;
+
+async function cloudLoad(){
+  try{
+    const r=await fetch(API_URL,{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(data&&(data.meta||data.risks||data.ktTopics)){
+      if(data.risks&&data.risks.length)D.risks=data.risks;
+      if(data.deps&&data.deps.length)D.deps=data.deps;
+      if(data.esc&&data.esc.length)D.esc=data.esc;
+      if(data.ktTopics)D.ktTopics=data.ktTopics;
+      if(data.customGroups)D.customGroups=data.customGroups;
+      if(data.meta)D.meta=data.meta;
+      if(data.items)D.items=data.items;
+      try{localStorage.setItem(LSK,JSON.stringify(D));}catch(e){}
+      showToast('Cloud data loaded');
+    }
+    updateMeta(true);
+  }catch(e){
+    console.warn('cloudLoad failed:',e);
+    updateMeta(false);
+    showToast('Cloud unavailable — using local cache');
+  }
+}
+
+async function cloudSave(){
+  if(_cloudSaving)return;
+  _cloudSaving=true;
+  updateMeta();
+  try{
+    D.meta.lastSaved=new Date().toISOString();
+    D.meta.savedBy=CU||'Unknown';
+    D.meta.saveCount=(D.meta.saveCount||0)+1;
+    const r=await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(D)
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    try{localStorage.setItem(LSK,JSON.stringify(D));}catch(e){}
+    updateMeta(true);
+  }catch(e){
+    console.warn('cloudSave failed:',e);
+    updateMeta(false);
+  }finally{
+    _cloudSaving=false;
+  }
+}
+
+function scheduleCloudSave(){
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer=setTimeout(()=>cloudSave(),1500);
+}
+
+function forceSave(){
+  clearTimeout(_cloudSaveTimer);
+  cloudSave().then(()=>showToast('Saved to cloud'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function fmtDt(iso){
+  if(!iso)return'';
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+
+           ' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){return iso;}
+}
+
+let tT;
+function showToast(msg){
+  const el=document.getElementById('tst');
+  el.textContent=msg;el.classList.add('on');
+  clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('on'),3200);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KT TOPICS DATA
+// ═══════════════════════════════════════════════════════════════
+const KT_TOPICS=[
+  {
+    group:'Resource Lifecycle — Onboarding & Offboarding',
+    color:'#7c3aed',cbg:'#f5f3ff',icon:'👤',
+    topics:[
+      {id:'TPC-01',t:'AGCS Resource Onboarding',covered:true,note:'Process for onboarding new team members — access, tools, system provisioning.'},
+      {id:'TPC-02',t:'AGCS Resource Offboarding',covered:true,note:'Process for offboarding departing resources — revoke access, handover tasks.'},
+      {id:'TPC-03',t:'AGCS GIAM ID Form Filing',covered:true,note:'How to raise and fill GIAM ID forms for new resources.'},
+      {id:'TPC-04',t:'Desktop Access for INT or PROD RACE IDs via GIAM',covered:true,note:'Provisioning desktop access to RACE IDs through the GIAM portal.'},
+      {id:'TPC-05',t:'AD Group Ownership Transfer',covered:false,note:'Transfer ownership of Active Directory groups to new SPOC — pending KT session.'},
+      {id:'TPC-06',t:'AGCS F Group Management – Resource Modification',covered:false,note:'Managing F groups for access modifications; session pending.'},
+      {id:'TPC-07',t:'Updated BOT Account Details',covered:false,note:'Complete and verified BOT account details list — pending.'},
+    ]
+  },
+  {
+    group:'BOT Account Management',
+    color:'#0369a1',cbg:'#f0f9ff',icon:'🤖',
+    topics:[
+      {id:'TPC-08',t:'Onboarding BOT Accounts to RACE',covered:true,note:'Steps to onboard digital BOT accounts to the RACE environment.'},
+      {id:'TPC-09',t:'Onboarding BOT Accounts (Digital IDs)',covered:true,note:'Creating and managing Digital IDs for BOT accounts.'},
+      {id:'TPC-10',t:'Onboarding of Development BOT Accounts to RACE',covered:true,note:'Specific process for DEV bot accounts onboarding to RACE.'},
+      {id:'TPC-11',t:'Offboarding of BOT Accounts from RACE',covered:true,note:'Steps to remove/decommission BOT accounts from RACE.'},
+      {id:'TPC-12',t:'AGCS BOT Allocation Details',covered:true,note:'Current BOT allocation mapping by process and environment.'},
+      {id:'TPC-13',t:'UAR – User Access Review',covered:false,note:'Periodic user access review process for BOT and human accounts — session pending.'},
+      {id:'TPC-14',t:'AOR – Access Ownership Review',covered:false,note:'Review and confirmation of access ownership across the platform — pending.'},
+      {id:'TPC-15',t:'Access Registry – Session',covered:false,note:'Dedicated session on the Access Registry framework — pending.'},
+    ]
+  },
+  {
+    group:'Orchestrator & Infrastructure Access',
+    color:'#065f46',cbg:'#f0fdf4',icon:'⚙️',
+    topics:[
+      {id:'TPC-16',t:'Orchestrator Access Management (Onboarding & Offboarding)',covered:true,note:'Managing Orchestrator roles, permissions and user lifecycle end-to-end.'},
+      {id:'TPC-17',t:'Share Drive Accesses',covered:true,note:'AGCS shared drive structure and how to request/manage access.'},
+      {id:'TPC-18',t:'Shared Drive Access and Ownership',covered:false,note:'Formal ownership transfer of shared drives — pending dedicated session.'},
+      {id:'TPC-19',t:'Keeper Access',covered:true,note:'Keeper password vault — access provisioning and usage for RPA team.',partial:true},
+      {id:'TPC-20',t:'Keeper Access – Full KT',covered:false,note:'Linkage between Keeper and Azure Key Vault is a known discrepancy — full KT session pending.'},
+      {id:'TPC-21',t:'Azure Key Vault – KT & Ownership Transfer',covered:false,note:'Azure Key Vault access not required for BOT accounts but linkage with Keeper needs clarification and formal KT.'},
+      {id:'TPC-22',t:'Session on Git & Required Access',covered:false,note:'Git repository structure, branching and access provisioning — session pending.'},
+    ]
+  },
+  {
+    group:'Change & Incident Management',
+    color:'#b45309',cbg:'#fffbeb',icon:'🔄',
+    topics:[
+      {id:'TPC-23',t:'Change Management Access – ServiceNow',covered:true,note:'How to raise and manage change requests in ServiceNow.'},
+      {id:'TPC-24',t:'Assignment Group Requests in SNOW',covered:true,note:'Creating and managing assignment groups within ServiceNow.'},
+      {id:'TPC-25',t:'SNOW Assignment Group for Infra Team',covered:false,note:'Dedicated Infra team assignment group setup in SNOW — pending.'},
+      {id:'TPC-26',t:'How to Create an Incident with GSD',covered:true,note:'Step-by-step guide to raising an incident with the GSD team.'},
+      {id:'TPC-27',t:'Session on Change Management & Implementation Access',covered:false,note:'Detailed session on change pipeline, CAB approvals and access — pending.'},
+    ]
+  },
+  {
+    group:'Mailbox & Communication',
+    color:'#0369a1',cbg:'#eff6ff',icon:'📧',
+    topics:[
+      {id:'TPC-28',t:'How to Create a Shared Mailbox under AGCS',covered:true,note:'Creating a shared mailbox via IT portal/request process.'},
+      {id:'TPC-29',t:'How to Modify a Shared Mailbox under AGCS',covered:true,note:'Adding/removing members and modifying permissions on shared mailboxes.'},
+      {id:'TPC-30',t:'Infra Shared Mailbox',covered:false,note:'Infra team dedicated shared mailbox — setup and ownership transfer pending.'},
+    ]
+  },
+  {
+    group:'Process & Application Catalog',
+    color:'#0f2744',cbg:'#eef2ff',icon:'📚',
+    topics:[
+      {id:'TPC-31',t:'AGCS Process / Application Catalog',covered:true,note:'Catalog of all AGCS RPA processes and associated applications.'},
+      {id:'TPC-32',t:'BOT Library',covered:true,note:'Reusable BOT components library — documented and covered.',partial:true},
+      {id:'TPC-33',t:'BOT Library – Full Session',covered:false,note:'In-depth session on the full BOT library, components and governance — pending.'},
+      {id:'TPC-34',t:'BOT Repository Utilization Tracker',covered:true,note:'Tracker for monitoring repository usage and active BOT deployments.'},
+      {id:'TPC-35',t:'Infra Tracker for RP Process',covered:true,note:'Infrastructure tracking spreadsheet for the RP process lifecycle.'},
+      {id:'TPC-36',t:'Confluence Setup for Infra Documentation',covered:false,note:'Setting up and organizing the Confluence space for Infra team docs — pending.'},
+    ]
+  },
+  {
+    group:'Billing & Licensing',
+    color:'#166534',cbg:'#f0fdf4',icon:'💰',
+    topics:[
+      {id:'TPC-37',t:'AGCS BOT Billing with RACE Team',covered:true,note:'BOT billing model and interaction with the RACE team for cost allocation.',partial:true},
+      {id:'TPC-38',t:'AGCS BOT Billing – Detailed Session',covered:false,note:'How billing adjustments are done, buffer licenses are considered — needs dedicated deep-dive session.'},
+    ]
+  },
+  {
+    group:'Miscellaneous & Platform Topics',
+    color:'#6b7280',cbg:'#f9fafb',icon:'🗂️',
+    topics:[
+      {id:'TPC-39',t:'CTWO Platform',covered:false,note:'CTWO infrastructure overview and transition — full KT session pending.'},
+      {id:'TPC-40',t:'VDI Diagnostics',covered:false,note:'Virtual Desktop Infrastructure diagnostics and troubleshooting — pending.'},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATES DATA
+// ═══════════════════════════════════════════════════════════════
+const TEMPLATES=[
+  {id:'TPL-01',icon:'👤',color:'#7c3aed',bg:'#f5f3ff',
+   title:'User Access Catalog',
+   desc:'Template to maintain the complete user access catalog across all systems. Tracks user, role, application, environment, access level and review dates.',
+   fields:['User ID','Full Name','Team/Vendor','Application','Environment','Role/Permission','Granted By','Granted On','Last Reviewed','Status','Comments'],
+   csvRows:[['User ID','Full Name','Team/Vendor','Application','Environment','Role/Permission','Granted By','Granted On','Last Reviewed','Status','Comments'],
+            ['','','','','','','','','','Active','']]},
+  {id:'TPL-02',icon:'📱',color:'#0369a1',bg:'#eff6ff',
+   title:'Application Access & Catalog',
+   desc:'Catalog of all RPA-integrated applications with access matrix, environment details and support contacts.',
+   fields:['App Name','App ID','Environment','Access Type','Owner','Admin Contact','Support Contact','URL/Path','Status','Notes'],
+   csvRows:[['App Name','App ID','Environment','Access Type','Owner','Admin Contact','Support Contact','URL/Path','Status','Notes'],
+            ['','','','','','','','','Active','']]},
+  {id:'TPL-03',icon:'📧',color:'#0f766e',bg:'#f0fdfa',
+   title:'Shared Mailbox Catalog',
+   desc:'Track all shared mailboxes — owner, members, purpose and modification history.',
+   fields:['Mailbox Name','Email Address','Purpose','Primary Owner','Members','Created On','Last Modified','Status','Notes'],
+   csvRows:[['Mailbox Name','Email Address','Purpose','Primary Owner','Members','Created On','Last Modified','Status','Notes'],
+            ['','','','','','','','Active','']]},
+  {id:'TPL-04',icon:'🎫',color:'#b45309',bg:'#fffbeb',
+   title:'SNOW Assignment Groups',
+   desc:'ServiceNow assignment group registry — name, purpose, members, manager and escalation.',
+   fields:['Group Name','Group ID (SNOW)','Purpose','Manager','Members','Created On','Environment','Status','Notes'],
+   csvRows:[['Group Name','Group ID (SNOW)','Purpose','Manager','Members','Created On','Environment','Status','Notes'],
+            ['','','','','','','','Active','']]},
+  {id:'TPL-05',icon:'🤖',color:'#1d4ed8',bg:'#eff6ff',
+   title:'RPA BOT Repository & Access Catalog',
+   desc:'Master catalog of all BOT accounts with RACE allocation, Digital IDs, environment, owner and access status.',
+   fields:['BOT Name','BOT ID','Digital ID','Environment','RACE Allocation','Process Name','Owner','Onboarded On','Status','Keeper Entry','Notes'],
+   csvRows:[['BOT Name','BOT ID','Digital ID','Environment','RACE Allocation','Process Name','Owner','Onboarded On','Status','Keeper Entry','Notes'],
+            ['','','','','','','','','Active','','']]},
+  {id:'TPL-06',icon:'📞',color:'#065f46',bg:'#f0fdf4',
+   title:'Contact Points Catalog',
+   desc:'Central contact directory for all key teams and SPOCs — GSD, RACE, GIAM, IT, Billing, Vendor support.',
+   fields:['Contact Name','Role/Team','Email','Phone','Area of Responsibility','Escalation Level','Backup Contact','Notes'],
+   csvRows:[['Contact Name','Role/Team','Email','Phone','Area of Responsibility','Escalation Level','Backup Contact','Notes'],
+            ['','','','','','L1','',' ']]},
+  {id:'TPL-07',icon:'🔑',color:'#7c3aed',bg:'#faf5ff',
+   title:'Access Registry – Keeper Access',
+   desc:'Keeper password vault entries catalog — BOT accounts, service accounts, shared credentials and vault structure.',
+   fields:['Entry Name','Vault Folder','Account Type','Username','Linked Azure KV','Environment','Owner','Last Rotated','Shared With','Status'],
+   csvRows:[['Entry Name','Vault Folder','Account Type','Username','Linked Azure KV','Environment','Owner','Last Rotated','Shared With','Status'],
+            ['','','BOT Account','','','','','','','Active']]},
+  {id:'TPL-08',icon:'🏷️',color:'#92400e',bg:'#fffbeb',
+   title:'Ownership Catalog',
+   desc:'Ownership register for all critical systems, shared assets and processes — who owns what and transition status.',
+   fields:['Asset/System','Asset Type','Current Owner','New Owner','Transition Date','Status','Sign-off By','Comments'],
+   csvRows:[['Asset/System','Asset Type','Current Owner','New Owner','Transition Date','Status','Sign-off By','Comments'],
+            ['','','','','','Pending','',' ']]},
+  {id:'TPL-09',icon:'📊',color:'#0f2744',bg:'#eef2ff',
+   title:'Infra Tracker',
+   desc:'Infrastructure process tracker for RP lifecycle — server, environment, BOT, status and maintenance windows.',
+   fields:['Process/Item','Environment','Server/Host','BOT ID','Status','Owner','Last Action','Next Action','Due Date','Notes'],
+   csvRows:[['Process/Item','Environment','Server/Host','BOT ID','Status','Owner','Last Action','Next Action','Due Date','Notes'],
+            ['','','','','Active','','','','','']]},
+  {id:'TPL-10',icon:'💳',color:'#166534',bg:'#f0fdf4',
+   title:'AGCS Billing Info – Infrastructure & Services',
+   desc:'Billing tracker for AGCS RPA infrastructure — BOT license costs, RACE billing, adjustments, buffer licenses and cost center allocation.',
+   fields:['Item','Category','Cost Center','Unit Cost','Quantity','Buffer Units','Total Cost','Billing Period','RACE Team Ref','Adjustment Notes','Status'],
+   csvRows:[['Item','Category','Cost Center','Unit Cost','Quantity','Buffer Units','Total Cost','Billing Period','RACE Team Ref','Adjustment Notes','Status'],
+            ['BOT License','UiPath License','','','','','','','','','Active']]},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER KT TOPICS PAGE (§7)
+// ═══════════════════════════════════════════════════════════════
+function renderKTTopics(){
+  const el=document.getElementById('c-s7');if(!el)return;
+  if(!D.ktTopics)D.ktTopics={};
+  if(!D.customGroups)D.customGroups=[];
+
+  function guessStatus(t){
+    if(t.covered&&!t.partial)return'Covered';
+    if(t.covered&&t.partial)return'Partial';
+    return'Pending';
+  }
+
+  function makeTopicRow(t,ti,isCustom,cgi){
+    const saved=D.ktTopics[t.id]||{};
+    const sts=saved.status||guessStatus(t);
+    const sClass=sts==='Covered'?'sCP':sts==='Partial'?'sIP':'sNS';
+    const defaultNote=t.note||'';
+    const userNote=saved.notes!==undefined?saved.notes:defaultNote;
+    const hN=!!(userNote&&userNote.trim());
+    const delBtn=isCustom
+      ?'<button class="nbtn" style="color:#dc2626;margin-left:4px" title="Delete topic" onclick="delKTTopic('+cgi+','+ti+')">&#10005;</button>'
+      :'';
+    const nameCell=isCustom
+      ?'<input type="text" class="oinp" style="min-width:200px" value="'+x(t.t)+'" placeholder="Topic name…" onchange="updCustomTopicName('+cgi+','+ti+',this.value)" onblur="updCustomTopicName('+cgi+','+ti+',this.value)">'+delBtn
+      :'<span class="ittl">'+x(t.t)+'</span>';
+    return '<tr class="ir'+(sts==='Covered'?' dn':'')+'" id="ir-'+t.id+'" data-sec="s7" data-pri="Medium" data-stat="'+(sts==='Covered'?'completed':sts==='Partial'?'in-progress':'not-started')+'">'
+      +'<td style="text-align:center;padding-left:12px"><input type="checkbox" class="cb" '+(sts==='Covered'?'checked':'')+' onchange="onTopicChk(this.dataset.id,this)" data-id="'+t.id+'"></td>'
+      +'<td><span class="inum">'+(ti+1)+'</span></td>'
+      +'<td>'+nameCell+'</td>'
+      +'<td style="width:110px"><select class="ssel '+sClass+'" id="tss-'+t.id+'" data-id="'+t.id+'" onchange="onTopicStat(this.dataset.id,this)">'
+        +'<option value="Pending"'+(sts==='Pending'?' selected':'')+'>&#x23F3; Pending</option>'
+        +'<option value="Partial"'+(sts==='Partial'?' selected':'')+'>&#x1F504; Partial</option>'
+        +'<option value="Covered"'+(sts==='Covered'?' selected':'')+'>&#x2705; Covered</option>'
+      +'</select></td>'
+      +'<td style="width:106px"><input type="date" class="oinp" value="'+(saved.date||'')+'" data-id="'+t.id+'" onchange="onTopicField(this.dataset.id,\'date\',this.value)" title="Date covered"></td>'
+      +'<td style="width:140px"><input type="text" class="oinp" value="'+x(saved.doc||'')+'" placeholder="Doc link / Confluence…" data-id="'+t.id+'" onchange="onTopicField(this.dataset.id,\'doc\',this.value)" onblur="onTopicField(this.dataset.id,\'doc\',this.value)"></td>'
+      +'<td style="width:62px"><button class="nbtn'+(hN?' on':'')+'" id="tnb-'+t.id+'" data-id="'+t.id+'" onclick="togTopicNote(this.dataset.id)">'+(hN?'&#x1F4DD; Edit':'+ Note')+'</button></td>'
+      +'</tr>'
+      +'<tr class="nrow'+(hN?' op':'')+'" id="tnr-'+t.id+'">'
+        +'<td colspan="7" style="padding:3px 9px 8px 44px!important">'
+          +'<textarea class="nta" placeholder="Notes, session summary, follow-up actions…" data-id="'+t.id+'" onchange="onTopicField(this.dataset.id,\'notes\',this.value)" onblur="onTopicField(this.dataset.id,\'notes\',this.value)">'+x(userNote)+'</textarea>'
+        +'</td>'
+      +'</tr>';
+  }
+
+  function makeGroupBlock(g,gi,isCustom){
+    const key=(isCustom?'s7c_':'s7_')+gi;
+    const exp=UC[key]===undefined?true:!UC[key];
+    const gCov=g.topics.filter(t=>(D.ktTopics[t.id]?.status||guessStatus(t))==='Covered').length;
+    const gPart=g.topics.filter(t=>(D.ktTopics[t.id]?.status||guessStatus(t))==='Partial').length;
+    const gPend=g.topics.length-gCov-gPart;
+    const gPct=g.topics.length?Math.round(gCov/g.topics.length*100):0;
+    const rows=g.topics.map((t,ti)=>makeTopicRow(t,ti,isCustom,isCustom?gi:null)).join('');
+    const delGrpBtn=isCustom
+      ?'<button class="xa" style="color:#dc2626;border-color:#fca5a5;margin-left:8px" onclick="delKTGroup('+gi+')" title="Delete this group">&#10005; Delete Group</button>'
+      :'';
+    const addTopicBtn='<button class="add-btn" onclick="addKTTopic('+gi+','+isCustom+')">+ Add Topic</button>';
+    const groupNameHtml=isCustom
+      ?'<input type="text" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:inherit;font-size:13px;font-weight:600;outline:none;min-width:180px;padding:1px 4px" value="'+x(g.group)+'" data-cgi="'+gi+'" onchange="updCustomGroupName(this.dataset.cgi,this.value)" onblur="updCustomGroupName(this.dataset.cgi,this.value)">'
+      :x(g.group);
+    const statBadges='<span class="tp-stat" style="background:#dcfce7;color:#166534">&#x2705; '+gCov+' Covered</span>'
+      +(gPart?'<span class="tp-stat" style="background:#dbeafe;color:#1d4ed8">&#x1F504; '+gPart+' Partial</span>':'')
+      +(gPend?'<span class="tp-stat" style="background:#fef3c7;color:#92400e">&#x23F3; '+gPend+' Pending</span>':'');
+    return '<div class="subc" id="grp-'+key+'">'
+      +'<div class="subc-hdr'+(exp?' op':'')+'" data-key="'+key+'" onclick="togSub(this.dataset.key)">'
+        +'<div class="subc-n" style="background:'+(g.color||'#6b7280')+'">'+(g.icon||'📁')+'</div>'
+        +'<div class="subc-info" onclick="event.stopPropagation()">'
+          +'<div class="subc-tt">'+groupNameHtml+'</div>'
+          +'<div class="subc-sm" id="csm-'+key+'">'+statBadges+'</div>'
+        +'</div>'
+        +'<div class="subc-right">'
+          +'<div class="subc-prog">'
+            +'<div class="subc-tr"><div class="subc-fl" id="cfl-'+key+'" style="width:'+gPct+'%;background:'+(gPct===100?'#16a34a':'#2563eb')+'"></div></div>'
+            +'<span id="cpct-'+key+'">'+gPct+'%</span>'
+          +'</div>'
+          +'<span class="chev'+(exp?' op':'')+'" id="sb-c-'+key+'">&#9660;</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="subc-body'+(exp?' op':'')+'" id="sb-b-'+key+'">'
+        +'<div style="overflow-x:auto">'
+          +'<table class="clt">'
+            +'<thead><tr>'
+              +'<th style="width:34px"></th>'
+              +'<th style="width:40px">#</th>'
+              +'<th>Topic / Handover Item</th>'
+              +'<th style="width:110px">Status</th>'
+              +'<th style="width:106px">Date Covered</th>'
+              +'<th style="width:140px">Documentation</th>'
+              +'<th style="width:62px">Notes</th>'
+            +'</tr></thead>'
+            +'<tbody>'+rows+'</tbody>'
+          +'</table>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px">'+addTopicBtn+delGrpBtn+'</div>'
+      +'</div>'
+    +'</div>';
+  }
+
+  const staticGroups=KT_TOPICS.map((g,gi)=>makeGroupBlock(g,gi,false)).join('');
+  const customGroupsHtml=D.customGroups.map((g,gi)=>makeGroupBlock(g,gi,true)).join('');
+
+  const cg=D.customGroups||[];
+  const totAll=KT_TOPICS.reduce((a,g)=>a+g.topics.length,0)+cg.reduce((a,g)=>a+(g.topics||[]).length,0);
+  const covAll=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>(D.ktTopics[t.id]?.status||guessStatus(t))==='Covered').length,0)
+    +cg.reduce((a,g)=>a+(g.topics||[]).filter(t=>D.ktTopics[t.id]?.status==='Covered').length,0);
+  const partAll=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>(D.ktTopics[t.id]?.status||guessStatus(t))==='Partial').length,0)
+    +cg.reduce((a,g)=>a+(g.topics||[]).filter(t=>D.ktTopics[t.id]?.status==='Partial').length,0);
+  const pendAll=totAll-covAll-partAll;
+  const pct=totAll?Math.round(covAll/totAll*100):0;
+
+  el.innerHTML=
+    '<div class="ph" style="border-left:4px solid #7c3aed">'
+      +'<div class="ph-ico" style="background:#f5f3ff">&#x1F4CB;</div>'
+      +'<div class="ph-body">'
+        +'<div class="ph-title">Section 7: KT Topics Coverage Tracker</div>'
+        +'<div class="ph-desc">Track all handover topics — grouped by area. Mark Covered/Partial/Pending, record the date covered, link to documentation, and add session notes. Use <strong>+ Add Group</strong> and <strong>+ Add Topic</strong> to extend with custom items.</div>'
+      +'</div>'
+      +'<div class="ph-prog">'
+        +'<div class="ph-pct" id="phpct-s7">'+pct+'%</div>'
+        +'<div class="ph-sub">'+covAll+' of '+totAll+' topics</div>'
+        +'<div class="ph-tr"><div class="ph-fl" id="phfl-s7" style="width:'+pct+'%;background:'+(pct===100?'#16a34a':'#7c3aed')+'"></div></div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="fbar">'
+      +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%">'
+        +'<span style="font-size:11px;font-weight:600;color:var(--g500)">Summary:</span>'
+        +'<span class="badge bL">&#x2705; '+covAll+' Covered</span>'
+        +'<span class="badge bD">'+partAll+' Partial</span>'
+        +'<span class="badge bM">&#x23F3; '+pendAll+' Pending</span>'
+        +'<span style="color:var(--g300);margin:0 4px">|</span>'
+        +'<span style="font-size:11px;color:var(--g500)">'+totAll+' total topics \xB7 '+pct+'% covered</span>'
+        +'<div class="xa-bar" style="margin-left:auto">'
+          +'<button class="xa" onclick="setAllTopicSubs(false)">&#x229E; Expand All</button>'
+          +'<button class="xa" onclick="setAllTopicSubs(true)">&#x229F; Collapse All</button>'
+          +'<button class="xa" style="background:#ede9fe;color:#6d28d9;border-color:#c4b5fd;font-weight:600" onclick="addKTGroup()">+ Add Group</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +staticGroups+customGroupsHtml;
+}
+
+
+function onTopicChk(id,cb){
+  if(!D.ktTopics)D.ktTopics={};
+  if(!D.ktTopics[id])D.ktTopics[id]={};
+  D.ktTopics[id].status=cb.checked?'Covered':'Pending';
+  const sel=document.getElementById('tss-'+id);
+  if(sel){sel.value=D.ktTopics[id].status;updTopicSel(sel);}
+  const row=document.getElementById('ir-'+id);
+  if(row){row.classList.toggle('dn',cb.checked);row.dataset.stat=cb.checked?'completed':'not-started';}
+  saveLS(true);updAll();updTopicProgress();
+}
+
+function onTopicStat(id,sel){
+  if(!D.ktTopics)D.ktTopics={};
+  if(!D.ktTopics[id])D.ktTopics[id]={};
+  D.ktTopics[id].status=sel.value;
+  updTopicSel(sel);
+  const row=document.getElementById('ir-'+id);
+  const cb=row?.querySelector('.cb');
+  if(cb)cb.checked=sel.value==='Covered';
+  if(row){row.classList.toggle('dn',sel.value==='Covered');row.dataset.stat=sel.value==='Covered'?'completed':sel.value==='Partial'?'in-progress':'not-started';}
+  saveLS(true);updAll();updTopicProgress();
+}
+
+function updTopicSel(sel){
+  sel.className='ssel';
+  sel.classList.add(sel.value==='Covered'?'sCP':sel.value==='Partial'?'sIP':'sNS');
+}
+
+function onTopicField(id,f,v){
+  if(!D.ktTopics)D.ktTopics={};
+  if(!D.ktTopics[id])D.ktTopics[id]={};
+  D.ktTopics[id][f]=v;
+  if(f==='notes'){
+    const btn=document.getElementById('tnb-'+id);
+    if(btn){btn.classList.toggle('on',!!v.trim());btn.textContent=v.trim()?'📝 Edit':'+ Note';}
+  }
+  saveLS(true);
+}
+
+function togTopicNote(id){
+  const r=document.getElementById('tnr-'+id);if(!r)return;
+  const op=r.classList.toggle('op');
+  const btn=document.getElementById('tnb-'+id);
+  if(btn)btn.classList.toggle('on',op);
+  if(op){const ta=r.querySelector('textarea');if(ta)setTimeout(()=>ta.focus(),40);}
+}
+
+function setAllTopicSubs(col){
+  KT_TOPICS.forEach((_,i)=>{
+    const key='s7_'+i;UC[key]=col;
+    const body=document.getElementById('sb-b-'+key);
+    const chev=document.getElementById('sb-c-'+key);
+    if(body)body.classList.toggle('op',!col);
+    if(chev)chev.classList.toggle('op',!col);
+  });
+  (D.customGroups||[]).forEach((_,i)=>{
+    const key='s7c_'+i;UC[key]=col;
+    const body=document.getElementById('sb-b-'+key);
+    const chev=document.getElementById('sb-c-'+key);
+    if(body)body.classList.toggle('op',!col);
+    if(chev)chev.classList.toggle('op',!col);
+  });
+  saveLS(true);
+}
+
+function updTopicProgress(){
+  const cg=D.customGroups||[];
+  const totAll=KT_TOPICS.reduce((a,g)=>a+g.topics.length,0)+cg.reduce((a,g)=>a+(g.topics||[]).length,0);
+  const covAll=KT_TOPICS.reduce((a,g)=>a+g.topics.filter(t=>{
+    const sts=D.ktTopics?.[t.id]?.status||(t.covered&&!t.partial?'Covered':t.covered&&t.partial?'Partial':'Pending');
+    return sts==='Covered';
+  }).length,0)+cg.reduce((a,g)=>a+(g.topics||[]).filter(t=>D.ktTopics?.[t.id]?.status==='Covered').length,0);
+  const pct=totAll?Math.round(covAll/totAll*100):0;
+  const pf=document.getElementById('phfl-s7'),pp=document.getElementById('phpct-s7');
+  if(pf){pf.style.width=pct+'%';pf.style.background=pct===100?'#16a34a':'#7c3aed';}
+  if(pp)pp.textContent=pct+'%';
+}
+
+// =============================================================
+// CUSTOM KT GROUP & TOPIC MANAGEMENT
+// =============================================================
+let cgC=1;
+
+function addKTGroup(){
+  if(!D.customGroups)D.customGroups=[];
+  const colors=['#6b7280','#0369a1','#7c3aed','#065f46','#b45309','#dc2626','#0f766e','#1d4ed8'];
+  const icons=['📁','📂','🗂️','📌','🔖','📎','🗃️','📑'];
+  const idx=D.customGroups.length%colors.length;
+  const id='CG-'+String(cgC++).padStart(2,'0');
+  D.customGroups.push({id,group:'New Group '+id,color:colors[idx],cbg:'#f9fafb',icon:icons[idx],topics:[]});
+  saveLS(true);renderKTTopics();updAll();
+  const key='s7c_'+(D.customGroups.length-1);
+  UC[key]=false;
+  const body=document.getElementById('sb-b-'+key);
+  if(body)body.classList.add('op');
+  showToast('Group added — click the name to rename it');
+}
+
+function addKTTopic(gi,isCustom){
+  if(isCustom){
+    if(!D.customGroups[gi])return;
+    if(!D.customGroups[gi].topics)D.customGroups[gi].topics=[];
+    const tid='CT-'+String(Date.now()).slice(-6);
+    D.customGroups[gi].topics.push({id:tid,t:'New Topic',covered:false,note:''});
+    saveLS(true);renderKTTopics();updAll();
+    const key='s7c_'+gi;
+    UC[key]=false;
+    const body=document.getElementById('sb-b-'+key);
+    if(body)body.classList.add('op');
+    showToast('Topic added — click the name to edit it');
+  } else {
+    if(!D.customGroups)D.customGroups=[];
+    const g=KT_TOPICS[gi];if(!g)return;
+    let mirror=D.customGroups.find(cg=>cg._mirrorOf===gi);
+    if(!mirror){
+      mirror={id:'CM-'+gi,group:g.group+' (extra)',color:g.color,cbg:g.cbg||'#f9fafb',icon:g.icon,topics:[],_mirrorOf:gi};
+      D.customGroups.push(mirror);
+    }
+    const tid='CT-'+String(Date.now()).slice(-6);
+    mirror.topics.push({id:tid,t:'New Topic',covered:false,note:''});
+    saveLS(true);renderKTTopics();updAll();
+    showToast('Topic added to extra group');
+  }
+}
+
+function delKTGroup(cgi){
+  if(!D.customGroups||!D.customGroups[cgi])return;
+  if(!confirm('Delete group "'+D.customGroups[cgi].group+'" and all its topics?'))return;
+  D.customGroups.splice(cgi,1);
+  saveLS(true);renderKTTopics();updAll();
+  showToast('Group deleted');
+}
+
+function delKTTopic(cgi,ti){
+  if(!D.customGroups||!D.customGroups[cgi])return;
+  if(!D.customGroups[cgi].topics||!D.customGroups[cgi].topics[ti])return;
+  if(!confirm('Delete this topic?'))return;
+  D.customGroups[cgi].topics.splice(ti,1);
+  saveLS(true);renderKTTopics();updAll();
+  showToast('Topic deleted');
+}
+
+function updCustomGroupName(cgi,val){
+  if(!D.customGroups||!D.customGroups[cgi])return;
+  D.customGroups[cgi].group=val;
+  saveLS(true);
+}
+
+function updCustomTopicName(cgi,ti,val){
+  if(!D.customGroups||!D.customGroups[cgi])return;
+  if(!D.customGroups[cgi].topics||!D.customGroups[cgi].topics[ti])return;
+  D.customGroups[cgi].topics[ti].t=val;
+  saveLS(true);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TEMPLATES PAGE (§8)
+// ═══════════════════════════════════════════════════════════════
+function renderTemplates(){
+  const el=document.getElementById('c-s8');if(!el)return;
+
+  function makeCSV(rows){
+    return rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  }
+
+  function dlBtn(tpl){
+    return `<button class="tpl-btn" style="background:${tpl.color}" onclick="dlTemplate('${tpl.id}')">
+      ⬇ Download CSV Template
+    </button>`;
+  }
+
+  const cards=TEMPLATES.map(tpl=>`
+<div class="tpl-card" style="border-top:3px solid ${tpl.color}">
+  <div class="tpl-card-head">
+    <div class="tpl-icon" style="background:${tpl.bg}">${tpl.icon}</div>
+    <div>
+      <div class="tpl-title">${x(tpl.title)}</div>
+      <div class="tpl-id">${tpl.id}</div>
+    </div>
+  </div>
+  <div class="tpl-desc">${x(tpl.desc)}</div>
+  <div class="tpl-fields">${tpl.fields.map(f=>`<span class="tpl-field">${x(f)}</span>`).join('')}</div>
+  ${dlBtn(tpl)}
+</div>`).join('');
+
+  el.innerHTML=`
+<div class="ph" style="border-left:4px solid #0369a1">
+  <div class="ph-ico" style="background:#eff6ff">📄</div>
+  <div class="ph-body">
+    <div class="ph-title">Section 8: Templates & Reference Catalogs</div>
+    <div class="ph-desc">Downloadable CSV templates for managing all key AGCS RPA infrastructure catalogs. Use these as a starting point — import into Excel or SharePoint Lists. Each template includes column headers ready for data entry.</div>
+  </div>
+</div>
+<div style="margin-bottom:12px;background:var(--pale);border:1px solid #bfdbfe;border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue2)">
+  ℹ️ <strong>Usage:</strong> Click <em>Download CSV Template</em> on any card to get a ready-made CSV file. Open in Excel, populate with your data, and save to the shared OneDrive folder. For SharePoint Lists, use the CSV column headers to create matching columns.
+</div>
+<div class="tpl-grid">${cards}</div>`;
+}
+
+function dlTemplate(id){
+  const tpl=TEMPLATES.find(t=>t.id===id);if(!tpl)return;
+  const csv=tpl.csvRows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download='AGCS_'+tpl.title.replace(/[^a-zA-Z0-9]/g,'_')+'.csv';
+  a.click();
+  showToast('⬇ Downloaded: '+tpl.title+'.csv');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init(){
+  initData();
+  cloudLoad().then(()=>{
+    renderAll();
+    updAll();
+    updateMeta();
+  });
+  setInterval(()=>saveLS(true),60000);
+}
+init();
+</script>
+</body>
+</html>
